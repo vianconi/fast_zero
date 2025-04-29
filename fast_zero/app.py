@@ -1,6 +1,7 @@
 from http import HTTPStatus
 
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 
 from fast_zero.schemas import Message, UserDB, UserList, UserPublic, UserSchema
 
@@ -11,6 +12,19 @@ database = []
 @app.get('/', status_code=200, response_model=Message)
 def read_root():
     return {'message': 'Olá Mundo!'}
+
+
+@app.get('/html/', status_code=200, response_class=HTMLResponse)
+def read_root_html():
+    return """
+    <html>
+      <head>
+        <title> Nosso olá mundo!</title>
+      </head>
+      <body>
+        <h1> Olá Mundo </h1>
+      </body>
+    </html>"""
 
 
 @app.post('/users', status_code=HTTPStatus.CREATED, response_model=UserPublic)
@@ -25,6 +39,16 @@ def create_user(user: UserSchema):
 @app.get('/users', response_model=UserList)
 def read_users():
     return {'users': database}
+
+
+@app.get('/users/{user_id}', response_model=UserPublic)
+def read_users_id(user_id: int):
+    if user_id > len(database) or user_id < 1:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+        )
+
+    return database[user_id - 1]
 
 
 @app.put('/users/{user_id}', response_model=UserPublic)
